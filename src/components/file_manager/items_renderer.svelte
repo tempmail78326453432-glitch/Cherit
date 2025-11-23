@@ -37,25 +37,11 @@
   <ul
     class="
     {is_root &&
-      'menu menu-sm rounded-box relative w-full select-none flex-1 overflow-y-auto flex-nowrap text-[color-mix(in_srgb,var(--color-base-content)_80%,black)] text-ellipsis leading-relaxed tracking-wide'}
-    {get_parent_path(file_tree[0].path) == focused_directory &&
-      ' before:opacity-100 before:bg-[var(--color-accent)] '}
-    flex flex-col gap-0.5 pt-0.5 before:transition-all"
+      'menu menu-sm rounded-box relative w-full select-none flex-1 overflow-y-auto flex-nowrap text-[color-mix(in_srgb,var(--color-base-content)_80%,black)] text-ellipsis leading-relaxed tracking-wide pb-50% '}
+    flex before:content-none flex-col gap-0.5 pt-0.5"
   >
     {#each file_tree as node (node.path)}
-      <li
-        onclick={(e) => {
-          if (e.target === e.currentTarget.querySelector(":scope > button")) {
-            focused_directory = get_parent_path(node.path);
-          } else if (
-            e.target === e.currentTarget.querySelector("details > summary")
-          ) {
-            focused_directory = node.path;
-          }
-        }}
-        in:fly={{ y: -10, duration: 300, easing: backOut }}
-        out:blur
-      >
+      <li in:fly={{ y: -10, duration: 300, easing: backOut }} out:blur>
         {#if node.isDirectory}
           {@const is_focused_and_collapsed_and_hover =
             expanded_state[node.path] === false &&
@@ -63,7 +49,7 @@
             hover_newfile_button}
           <details
             open={!collapsed_state}
-            class="w-full {!is_focused_and_collapsed_and_hover &&
+            class="w-full overflow-visible {!is_focused_and_collapsed_and_hover &&
               'overflow-y-clip'}"
             use:animatedDetails={{
               duration: 100 - 10 + 10 * node.children.length,
@@ -77,8 +63,12 @@
               onmousedown={() => {
                 expanded_nodes_ever[node.path] = true;
               }}
-              onclick={() =>
-                (expanded_state[node.path] = !expanded_state[node.path])}
+              onclick={(e) => {
+                expanded_state[node.path] = !expanded_state[node.path];
+                if (e.target === e.currentTarget) {
+                  focused_directory = node.path;
+                }
+              }}
               onkeydown={(e: KeyboardEvent) => {
                 if (e.key !== " ") return;
                 expanded_nodes_ever[node.path] = true;
@@ -103,14 +93,30 @@
             class="{opened_filenode?.path === node.path
               ? 'bg-base-content/10'
               : ''} py-0.75 w-full hover:text-[color-mix(in_srgb,var(--color-base-content)_85%,black)] truncate block"
-            onclick={() => {
+            onclick={(e) => {
               opened_filenode = node;
+              if (e.target === e.currentTarget) {
+                focused_directory = get_parent_path(node.path);
+              }
             }}
             >{node.name}
           </button>
         {/if}
       </li>
     {/each}
+    <button
+      aria-label="Set focused directory"
+      class=" w-2 flex hover:bg-accent absolute start--1.75 top-3 bottom-3 transition-all"
+      onclick={() => (focused_directory = get_parent_path(file_tree[0].path))}
+    >
+      <span
+        class="w-1px h-full m-auto transition-all
+        {get_parent_path(file_tree[0].path) == focused_directory
+          ? 'bg-[var(--color-accent)] '
+          : 'bg-[rgb(from_var(--color-base-content)_r_g_b_/_0.1)]'}
+        "
+      ></span>
+    </button>
   </ul>
 {:else if is_root && !file_tree.length}
   <div

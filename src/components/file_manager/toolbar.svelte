@@ -1,7 +1,7 @@
 <script lang="ts">
   import { type FileNode } from "@/types";
-  import { create } from "@tauri-apps/plugin-fs";
-  import { insert_node_in_place } from "./file_tree_functions";
+  import { create, mkdir } from "@tauri-apps/plugin-fs";
+  import { exists, insert_node_in_place } from "./file_tree_functions";
   let {
     collapsed_state = $bindable(),
     file_tree = $bindable(),
@@ -17,7 +17,6 @@
     opened_filenode: FileNode | undefined;
     hover_newfile_button: boolean;
   } = $props();
-  let untitled_file_counter = 0;
 </script>
 
 <div
@@ -30,15 +29,17 @@
     onmouseenter={() => (hover_newfile_button = true)}
     onmouseleave={() => (hover_newfile_button = false)}
     onclick={async () => {
-      const new_file_path =
-        `${focused_directory}/Untitled ${untitled_file_counter || ""}`.trim() +
-        ".md";
+      let i = 0,
+        name = "Untitled";
+      while (exists(file_tree, `${focused_directory}/${name}.md`))
+        name = `Untitled ${++i}`;
 
+      const new_file_path = `${focused_directory}/${name}.md`;
       await create(new_file_path);
       const node = insert_node_in_place(
         file_tree,
         {
-          name: `Untitled ${untitled_file_counter || ""}`.trim(),
+          name,
           path: new_file_path,
           isDirectory: false,
           children: [],
@@ -46,21 +47,30 @@
         root_path,
       );
       opened_filenode = node;
-
-      untitled_file_counter++;
     }}
     ><div class="i-tabler:edit size-5"></div>
   </button>
   <button
     aria-label="New Folder Button"
     class="btn btn-ghost hover:bg-[color-mix(in_srgb,var(--color-base-content)_22%,black)] btn-sm max-h-none p-1"
-    onclick={() => {
-      file_tree.push({
-        name: "Hello",
-        path: root_path + "/hello",
-        isDirectory: true,
-        children: [],
-      });
+    onclick={async () => {
+      let i = 0,
+        name = "Untitled";
+      while (exists(file_tree, `${focused_directory}/${name}`))
+        name = `Untitled ${++i}`;
+
+      const new_folder_path = `${focused_directory}/${name}`;
+      await mkdir(new_folder_path);
+      insert_node_in_place(
+        file_tree,
+        {
+          name,
+          path: new_folder_path,
+          isDirectory: true,
+          children: [],
+        },
+        root_path,
+      );
     }}
     ><div class="i-tabler:folder-plus size-5"></div>
   </button>
