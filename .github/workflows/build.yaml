@@ -24,7 +24,7 @@ jobs:
           - platform: "windows-latest"
             args: ""
           - platform: 'ubuntu-latest'
-            args: '--verbose --debug'
+            args: ''
             mobile: 'android'
     runs-on: ${{ matrix.platform }}
     steps:
