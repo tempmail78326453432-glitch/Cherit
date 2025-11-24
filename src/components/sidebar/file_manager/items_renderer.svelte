@@ -5,7 +5,7 @@
 
 <script lang="ts">
   import type { FileNode } from "@/types";
-  import ItemsRenderer from "@/components/file_manager/items_renderer.svelte";
+  import ItemsRenderer from "./items_renderer.svelte";
   import { blur, fly } from "svelte/transition";
   import { backOut } from "svelte/easing";
   import animatedDetails from "svelte-animated-details";
@@ -37,7 +37,10 @@
   <ul
     class="
     {is_root &&
-      'menu menu-sm rounded-box relative w-full select-none flex-1 overflow-y-auto flex-nowrap text-[color-mix(in_srgb,var(--color-base-content)_80%,black)] text-ellipsis leading-relaxed tracking-wide pb-50% '}
+      'menu menu-sm h-full rounded-box relative w-full select-none  overflow-y-auto flex-nowrap text-[color-mix(in_srgb,var(--color-base-content)_80%,black)] text-ellipsis leading-relaxed tracking-wide  '}
+    {is_root &&
+      focused_directory == root_path &&
+      'shadow-[inset_0_0_0_1px_var(--color-accent)]'}
     flex before:content-none flex-col gap-0.5 pt-0.5"
   >
     {#each file_tree as node (node.path)}
@@ -106,7 +109,8 @@
     {/each}
     <button
       aria-label="Set focused directory"
-      class=" w-2 flex hover:bg-accent absolute start--1.75 top-3 bottom-3 transition-all"
+      class=" w-2 flex hover:bg-accent absolute start--1.75 top-3 bottom-3 transition-all rounded-0.7"
+      disabled={is_root}
       onclick={() => (focused_directory = get_parent_path(file_tree[0].path))}
     >
       <span
@@ -117,6 +121,14 @@
         "
       ></span>
     </button>
+    {#if is_root}
+      <button
+        aria-label="Set Focus to root"
+        class="min-h-30% grow"
+        onclick={() => (focused_directory = root_path)}
+      >
+      </button>
+    {/if}
   </ul>
 {:else if is_root && !file_tree.length}
   <div
